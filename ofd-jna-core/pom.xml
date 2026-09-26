@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<modelVersion>4.0.0</modelVersion>
+<groupId>com.oftdrw</groupId>
+<artifactId>ofd-jna-core</artifactId>
+<version>1.0.0</version>
+<packaging>jar</packaging>
+<name>ofd-jna-core</name>
+<description>OFD Reader/Editor core bridge layer: ofdrw sub‑modules 2.0.2 + JNA 5.14</description>
+<properties>
+<maven.compiler.source>11</maven.compiler.source>
+<maven.compiler.target>11</maven.compiler.target>
+<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+<jna.version>5.14.0</jna.version>
+<ofdrw.version>2.0.2</ofdrw.version>
+</properties>
+<dependencies>
+    <!-- JNA: Java‑C FFI bridging -->
+    <dependency>
+        <groupId>net.java.dev.jna</groupId>
+        <artifactId>jna</artifactId>
+        <version>${jna.version}</version>
+    </dependency>
+
+    <!-- ofdrw 原生子模块，替代空壳 ofdrw‑full，groupId=org.ofdrw，已本地install -->
+    <!-- ofdrw-reader: OFD document reading entry (org.ofdrw.reader.OFDReader) -->
+    <dependency>
+        <groupId>org.ofdrw</groupId>
+        <artifactId>ofdrw-reader</artifactId>
+        <version>${ofdrw.version}</version>
+    </dependency>
+
+    <!-- zip4j: ofdrw-pkg 打包 OFD(zip) 所需，已本地install；未在 ofdrw-reader 传递依赖缓存中，
+         必须显式声明，否则 ofd_save_to_file 调用 OFDDir.jar 报 NoClassDefFoundError -->
+    <dependency>
+        <groupId>net.lingala.zip4j</groupId>
+        <artifactId>zip4j</artifactId>
+        <version>2.11.3</version>
+    </dependency>
+
+    <!-- PDFBox JBIG2: ofdrw 解 .jb2 格式图片(电子发票二维码)所需，
+         ofdrw-reader 把它声明为 provided 可选依赖，必须显式引入 -->
+    <dependency>
+        <groupId>org.apache.pdfbox</groupId>
+        <artifactId>jbig2-imageio</artifactId>
+        <version>3.0.3</version>
+    </dependency>
+</dependencies>
+<build>
+<finalName>ofd-jna-core-${project.version}</finalName>
+<plugins>
+<plugin>
+<groupId>org.apache.maven.plugins</groupId>
+<artifactId>maven-compiler-plugin</artifactId>
+<version>3.13.0</version>
+<configuration>
+<source>${maven.compiler.source}</source>
+<target>${maven.compiler.target}</target>
+<encoding>${project.build.sourceEncoding}</encoding>
+</configuration>
+</plugin>
+<plugin>
+<groupId>org.apache.maven.plugins</groupId>
+<artifactId>maven-jar-plugin</artifactId>
+<version>3.1.2</version>
+<configuration>
+<archive>
+<manifest>
+<mainClass>com.oftdrw.ffi.api.OFDMain</mainClass>
+</manifest>
+</archive>
+</configuration>
+</plugin>
+</plugins>
+</build>
+</project>

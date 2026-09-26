@@ -1,0 +1,10 @@
+#!/bin/bash
+set -e
+
+case "$1" in
+    prerm)
+        # 卸载前杀进程
+        pkill -f ofd-dtk6-editor 2>/dev/null || true
+        sleep 0.5
+        ;;
+esac

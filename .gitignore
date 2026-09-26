@@ -1,0 +1,52 @@
+# ========================
+# OFD Editor - gitignore
+# ========================
+
+# --- 编译产物 ---
+**/build/
+**/target/
+**/CMakeFiles/
+**/CMakeCache.txt
+**/cmake_install.cmake
+**/Makefile
+**/*.o
+**/*.so
+**/*.so.*
+**/*.a
+**/*.class
+
+# --- Qt / CMake 自动生成 ---
+**/autogen/
+**/*_autogen/
+**/mocs_compilation.cpp
+**/CMakeConfigureLog.yaml
+**/cmake.check_cache
+**/*.cmake
+
+# --- 发布打包产物 ---
+release/out/
+release/deb-staging/
+release/jre/            # jlink 裁剪 JRE（50MB，二进制不上传）
+release/libs/           # 运行时依赖 jars（42MB，用户自行 mvn 拉取）
+*.deb
+
+# --- 测试文件（不算主体） ---
+**/test_*.cpp
+**/test_*.c
+**/Test*.java
+
+# --- Java 崩溃日志 ---
+hs_err_pid*.log
+replay_pid*.log
+
+# --- IDE / 系统 ---
+.vscode/
+.trae/
+.idea/
+.DS_Store
+*.swp
+*~
+
+# --- 临时文件 ---
+*.log
+*.tmp

@@ -1,0 +1,42 @@
+#!/usr/bin/make -f
+#
+# Debian rules for ofd-editor
+# 所有构建步骤由 release/build-release.sh 完成。
+# 本文件只做 deb 打包的最后一步。
+#
+# 构建:
+#   dpkg-buildpackage -us -uc -b
+
+DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	@echo "构建由 release/build-release.sh 完成，跳过 dh_auto_build"
+
+override_dh_auto_test:
+	@echo "跳过自动测试"
+
+override_dh_auto_install:
+	# 安装: 把 release/out/ofd-editor/ 拷贝到 debian/opt/ofd-editor/
+	mkdir -p debian/opt/ofd-editor
+	if [ -d release/out/ofd-editor ]; then \
+	    cp -r release/out/ofd-editor/* debian/opt/ofd-editor/ ; \
+	else \
+	    echo "错误: 找不到 release/out/ofd-editor/" >&2 ; \
+	    exit 1 ; \
+	fi
+	# /usr/bin 启动入口
+	mkdir -p debian/usr/bin
+	ln -sf ../../opt/ofd-editor/bin/ofd-editor debian/usr/bin/ofd-editor
+	# desktop 文件
+	mkdir -p debian/usr/share/applications
+	cp debian/ofd-editor.desktop debian/usr/share/applications/
+	# 图标
+	mkdir -p debian/usr/share/icons/hicolor/scalable/apps
+	cp debian/ofd-editor.svg debian/usr/share/icons/hicolor/scalable/apps/ 2>/dev/null || true
+	# 权限
+	chmod +x debian/opt/ofd-editor/bin/*
+	chmod +x debian/usr/bin/ofd-editor

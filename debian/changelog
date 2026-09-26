@@ -1,0 +1,7 @@
+ofd-editor (1.0.0) unstable; urgency=medium
+
+  * 初始版本：基于 DTK6 的 OFD 阅读器+简易编辑器
+  * 内置裁剪版 JRE（jlink），无需用户预装 Java
+  * 使用 ofdrw-full 2.0.2 解析，JNA 5.14 FFI 桥接
+
+ -- OFD Editor Team <ofd-editor@deepin.org>  Thu, 26 Sep 2026 16:00:00 +0800

@@ -1,0 +1,67 @@
+#!/bin/bash
+# ============================================================================
+# ofd-editor — OFD 阅读器+编辑器 启动脚本
+#
+# 功能：
+#   1. 定位软件安装根目录（脚本所在目录的上一级）
+#   2. 设置 LD_LIBRARY_PATH 优先指向内置 JRE（jlink 裁剪版 libjvm.so）
+#      → 覆盖 libofd-jna-core.so 硬编码的 RUNPATH
+#   3. 用内置 JRE 收集所有依赖 jars 到 OFD_JNA_CLASSPATH
+#   4. exec 启动 DTK6 C++ 主程序
+#
+# 约束：用户电脑不需要预装任何 Java/JRE。
+# ============================================================================
+
+set -e
+
+# --- 1. 定位安装根目录 ---
+# 关键：用 readlink -f 解析 symlink，因为 .desktop 的 Exec 指向
+# /usr/bin/ofd-editor → /opt/ofd-editor/bin/ofd-editor（symlink）
+# 必须找到真实物理路径，否则 APP_HOME 会变成 /usr（错！）
+REAL_PATH="$(readlink -f "$0")"
+SCRIPT_DIR="$(cd "$(dirname "$REAL_PATH")" && pwd)"
+APP_HOME="$(dirname "$SCRIPT_DIR")"
+# 健壮性：确认 bin/ 子目录存在，否则再向上一级
+if [ ! -d "$APP_HOME/bin" ]; then
+    APP_HOME="$(dirname "$APP_HOME")"
+fi
+
+# --- 2. 设置内置 JRE ---
+JRE_DIR="$APP_HOME/jre"
+if [ ! -d "$JRE_DIR" ]; then
+    echo "[ofd-editor] 错误: 找不到内置 JRE 目录 $JRE_DIR" >&2
+    exit 1
+fi
+
+JAVA_HOME="$JRE_DIR"
+export JAVA_HOME
+
+# --- 3. LD_LIBRARY_PATH：内置 JRE 优先于任何系统 JDK ---
+# libofd-jna-core.so 硬编码 RUNPATH 指向系统 JDK，
+# 但 LD_LIBRARY_PATH 优先级高于 DT_RUNPATH。
+# 同时加入 native so 所在目录。
+export LD_LIBRARY_PATH="$JRE_DIR/lib/server:$APP_HOME/lib:$LD_LIBRARY_PATH"
+
+# --- 4. OFD_JNA_CLASSPATH：收集所有 jars ---
+# Java classes 目录
+CP="$APP_HOME/java/classes"
+
+# 业务 jars（如果有打包的话）
+for jar in "$APP_HOME/java"/*.jar; do
+    [ -f "$jar" ] && CP="$CP:$jar"
+done
+
+# 依赖 jars
+for jar in "$APP_HOME/java/libs"/*.jar; do
+    [ -f "$jar" ] && CP="$CP:$jar"
+done
+
+export OFD_JNA_CLASSPATH="$CP"
+
+# --- 5. 可选：OFD_EDITOR_FONTS 覆盖内置字体 ---
+if [ -d "$APP_HOME/fonts" ]; then
+    export OFD_EDITOR_FONTS="$APP_HOME/fonts"
+fi
+
+# --- 6. 启动 DTK6 C++ 主程序 ---
+exec "$APP_HOME/bin/ofd-dtk6-editor" "$@"

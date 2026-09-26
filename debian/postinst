@@ -1,0 +1,19 @@
+#!/bin/bash
+set -e
+
+case "$1" in
+    configure|postinst)
+        # 确保内置 JRE 和 native so 有正确权限
+        if [ -d /opt/ofd-editor ]; then
+            find /opt/ofd-editor -type d -exec chmod 755 {} + 2>/dev/null || true
+            find /opt/ofd-editor -type f -exec chmod 644 {} + 2>/dev/null || true
+            chmod +x /opt/ofd-editor/bin/ofd-dtk6-editor 2>/dev/null || true
+            chmod +x /opt/ofd-editor/bin/ofd-editor 2>/dev/null || true
+            chmod +x /opt/ofd-editor/jre/bin/* 2>/dev/null || true
+            # 图标缓存更新
+            if command -v update-desktop-database >/dev/null 2>&1; then
+                update-desktop-database /usr/share/applications 2>/dev/null || true
+            fi
+        fi
+        ;;
+esac

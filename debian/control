@@ -1,0 +1,14 @@
+Package: ofd-editor
+Version: 1.0.0
+Section: office
+Priority: optional
+Architecture: amd64
+Maintainer: OFD Editor Team <ofd-editor@deepin.org>
+Depends: libdtk6core, libdtk6gui, libdtk6widget, libdtk6log, libqt6core6, libqt6gui6, libqt6widgets6, libgl1, libc6 (>= 2.34)
+Suggests: fonts-noto-cjk, deepin-elf-verify
+Description: OFD 阅读器+简易编辑器（DTK6 GUI + JNA FFI）
+ 基于 DTK6 构建的 OFD 电子文档阅读器和简易编辑器。
+ 支持打开、浏览、渲染 OFD 文件，支持文字和图形对象的
+ 编辑、保存。底层使用 ofdrw-full 2.0.2 解析，JNA 5.14
+ 实现 Java-C++ FFI 桥接。
+ 本包内置裁剪版 JRE（jlink），用户无需预装 Java。

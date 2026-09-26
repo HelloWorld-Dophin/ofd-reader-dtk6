@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=OFD 编辑器
+GenericName=OFD Editor
+GenericName[en_US]=OFD Editor
+Comment=OFD 电子文档阅读器和简易编辑器
+Comment[en_US]=OFD electronic document viewer and editor
+Exec=/usr/bin/ofd-editor %F
+Icon=ofd-editor
+Terminal=false
+Categories=Office;Graphics;Viewer;Editor;MimeType=application/ofd;application/octet-stream;
+StartupNotify=true
+StartupWMClass=ofd-dtk6-editor
