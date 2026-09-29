@@ -1,8 +1,8 @@
 # ============================================================================
 # ofd-jna-core-native — JNI C ABI 包装层
 #
-# 功能：生成 libofd-jna-core.so，导出 13 个 C ABI 函数，
-#       内部通过 JNI 调用 Java 端 OFDFfi.java 静态方法。
+# 功能：生成 libofd-jna-core.so，导出 C ABI 函数，
+#       内部通过 JNI 调用 Java 端 OFDFfi 静态方法。
 #
 # 依赖：JDK (JNI headers) + ofd-jna-core (Java jar)
 # ============================================================================
@@ -12,11 +12,10 @@ project(ofd-jna-core-native LANGUAGES C)
 set(CMAKE_C_STANDARD 11)
 
 # ============================================================================
-# JNI 查找
+# JNI 头文件查找（仅头，不链库 —— JVM 运行时 dlopen）
 # ============================================================================
 find_package(JNI REQUIRED)
 message(STATUS "JNI include dirs: ${JNI_INCLUDE_DIRS}")
-message(STATUS "JNI libraries:    ${JNI_LIBRARIES}")
 
 # ============================================================================
 # 目标

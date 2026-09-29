@@ -1,4 +1,18 @@
-ofd-editor (1.0.0) unstable; urgency=medium
+ofd-editor (1.0.3) unstable; urgency=medium
+
+  * 修复非首页乱码：OFD 打开后自动扫描 Doc_N/Res/ 加载内嵌 CID 字体（sysfST 等）到 QFontDatabase
+  * 状态栏：页码 SpinBox 去上下箭头 + 联动 Slider/箭头按钮禁用状态
+
+ -- Kelvinxi <kelvinxi@outlook.com>  Fri, 27 Sep 2026 21:00:00 +0800
+
+ofd-editor (1.0.2) unstable; urgency=medium
+
+  * 修复打包版公章(红色税务监制图片)无法显示问题：收集全部 ~/.m2 依赖 jars（166 个），不再手动枚举漏项
+  * 关于界面版本号、deb 元数据版本号统一更新
+
+ -- Kelvinxi <kelvinxi@outlook.com>  Fri, 27 Sep 2026 11:00:00 +0800
+
+ofd-editor (1.0.1) unstable; urgency=medium
 
   * 初始版本：基于 DTK6 的 OFD 阅读器+简易编辑器
   * 内置裁剪版 JRE（jlink），无需用户预装 Java

@@ -40,6 +40,7 @@ static jmethodID mid_ofd_add_rect_path   = NULL;
 static jmethodID mid_ofd_delete_object   = NULL;
 static jmethodID mid_ofd_add_page        = NULL;
 static jmethodID mid_ofd_save_to_file    = NULL;
+static jmethodID mid_ofd_get_work_dir    = NULL;
 
 /* ==================== JVM 初始化 ==================== */
 
@@ -131,6 +132,7 @@ static int ensureJvm() {
     GET_MID(mid_ofd_delete_object,   "ofd_delete_object",   "(JII)I");
     GET_MID(mid_ofd_add_page,        "ofd_add_page",        "(J)I");
     GET_MID(mid_ofd_save_to_file,    "ofd_save_to_file",    "(JLjava/lang/String;)I");
+    GET_MID(mid_ofd_get_work_dir,    "ofd_get_work_dir",    "(J)Ljava/lang/String;");
 
 #undef GET_MID
 
@@ -340,4 +342,31 @@ int ofd_save_to_file(long handle, const char* outputPath) {
     JNI_CHECK();
     if (jpath) (*g_env)->DeleteLocalRef(g_env, jpath);
     return (int)result;
+}
+
+// ofd_get_work_dir — 返回 UTF-8 字符串（用 Native.malloc 分配，caller 用 ofd_free_string 释放）
+// 返回 NULL 表示失败
+void* ofd_get_work_dir(long handle) {
+    if (ensureJvm() != 0) return NULL;
+    jstring jstr = (jstring)(*g_env)->CallStaticObjectMethod(g_env, g_classOfdfi, mid_ofd_get_work_dir, (jlong)handle);
+    JNI_CHECK();
+    if (jstr == NULL) return NULL;
+
+    const char* utf = (*g_env)->GetStringUTFChars(g_env, jstr, NULL);
+    if (utf == NULL) {
+        (*g_env)->DeleteLocalRef(g_env, jstr);
+        return NULL;
+    }
+    size_t len = strlen(utf);
+    // 用 Native.malloc（和 ofd_get_last_error 一致）
+    jclass nativeCls = (*g_env)->FindClass(g_env, "com/sun/jna/Native");
+    jmethodID mallocMid = (*g_env)->GetStaticMethodID(g_env, nativeCls, "malloc", "(J)J");
+    jlong addr = (*g_env)->CallStaticLongMethod(g_env, nativeCls, mallocMid, (jlong)(len + 1));
+    void* mem = (void*)(intptr_t)addr;
+    (*g_env)->DeleteLocalRef(g_env, nativeCls);
+
+    if (mem) memcpy(mem, utf, len + 1);
+    (*g_env)->ReleaseStringUTFChars(g_env, jstr, utf);
+    (*g_env)->DeleteLocalRef(g_env, jstr);
+    return mem;
 }

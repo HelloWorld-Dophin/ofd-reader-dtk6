@@ -1,19 +1,23 @@
 # 🎉 OFD 阅读器（编辑器）— Deepin DTK6 原生应用 发布啦！
 
 > 一款基于 **Deepin Tool Kit 6** 构建的 OFD 电子文档阅读器和简易编辑器，零预装依赖，下载即用。
+> 
+> **🚀开源地址：https://github.com/HelloWorld-Dophin/ofd-reader-dtk6**
 
----
+## **📷️运行截图：**
+
+![image.png](https://storage.deepin.org/thread/202609261238142059_image.png)
 
 ## 🚀 立即下载：Deepin/UOS 安装包（88MB，含内置 JRE + 字体 + 所有依赖）
 
 > 👇 **点击下方链接，一键安装！无需预装 Java！**
 
-| 📖下载平台            | 📦 下载项                                                                                          |
-| --------------------- | -------------------------------------------------------------------------------------------------- |
-| 🚀蓝奏云   密码: f298 | **[ofd-editor\_1.0.0\_amd64.deb](https://kelvinxi.lanzouq.com/itOni49zfa8h "蓝奏云")**             |
-| 123云盘               | **[ofd-editor_1.0.0_amd64.deb](https://1846023722.share.123pan.cn/123pan/kASqTd-0j9w3 "123网盘")** |
-| 夸克网盘              | **[ofd-editor\_1.0.0\_amd64.deb](https://pan.quark.cn/s/4b7e937cc9d2 "夸克网盘")**                 |
-| 🚀阿里云盘            | **[ofd-editor\_1.0.0\_amd64.deb](https://www.alipan.com/s/KaZncbbkfUN "阿里云盘")**                |
+| 📖下载平台           | 📦 下载项                                                                                          |
+| -------------------- | -------------------------------------------------------------------------------------------------- |
+| 🚀蓝奏云   密码:1ohf | **[ofd-editor\_1.0.0\_amd64.deb](https://kelvinxi.lanzouq.com/iVeCW4a0606h "蓝奏云")**             |
+| 123云盘              | **[ofd-editor_1.0.0_amd64.deb](https://1846023722.share.123pan.cn/123pan/kASqTd-UoTw3 "123网盘")** |
+| 夸克网盘             | **[ofd-editor\_1.0.0\_amd64.deb](https://pan.quark.cn/s/2c5c7238786f "夸克网盘")**                 |
+| 🚀阿里云盘           | **[ofd-editor\_1.0.0\_amd64.deb](https://www.alipan.com/s/vmgrz75Eoxo "阿里云盘")**                |
 
 安装命令：
 
@@ -232,7 +236,7 @@ deb 包体积 \~88MB，包含：
 ## 🗺️ 未来计划
 
 - [ ] Windows 版本适配（MSYS2 + Qt6 + 内置 JRE）
-- [ ] 更多编辑能力：拖拽移动元素、复制粘贴、撤销重做
+- [ ] 编辑能力：拖拽移动元素、复制粘贴、撤销重做
 - [ ] 打印预览 + 直接打印
 - [ ] 文档缩略图侧栏
 - [ ] 最近打开列表（QSettings）
@@ -245,7 +249,8 @@ deb 包体积 \~88MB，包含：
 欢迎反馈问题！
 
 - 博客：[https://www.cnblogs.com/Kelvinxi/](https://www.cnblogs.com/Kelvinxi/)
-- 邮件：`<kelvinxi@outlook.com>`
+- 邮件：`kelvinxi@outlook.com`
+- 开源地址：[https://github.com/HelloWorld-Dophin/ofd-reader-dtk6](https://github.com/HelloWorld-Dophin/ofd-reader-dtk6)
 
 ## 📄 开源许可
 

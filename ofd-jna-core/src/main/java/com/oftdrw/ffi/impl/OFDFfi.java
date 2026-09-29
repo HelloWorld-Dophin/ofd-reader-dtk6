@@ -302,6 +302,29 @@ public final class OFDFfi {
     }
 
     /**
+     * 获取 OFD 文档解压后的临时工作目录路径。
+     *
+     * <p>C++ 侧可从此目录扫描 Doc_N/Res/ 加载内嵌字体等资源。</p>
+     *
+     * @param handle 文档句柄
+     * @return 工作目录绝对路径；失败返回 null
+     */
+    public static String ofd_get_work_dir(long handle) {
+        try {
+            OFDReader reader = OFDHandleManager.get(handle);
+            if (reader == null) {
+                OFDErrorBuffer.setError("ofd_get_work_dir: 句柄无效");
+                return null;
+            }
+            java.nio.file.Path p = reader.getWorkDir();
+            return p != null ? p.toAbsolutePath().toString() : null;
+        } catch (Throwable t) {
+            OFDErrorBuffer.setError("ofd_get_work_dir 异常: " + t.getMessage());
+            return null;
+        }
+    }
+
+    /**
      * 将内存 DOM 另存为标准 OFD 文件（ofdrw 完成 zip 打包）。
      *
      * @return 成功返回 1；失败返回 0

@@ -122,6 +122,7 @@ OfdJnaBridge::OfdJnaBridge(const std::string& libPath) {
     fn_delete_object_      = sym<FnDeleteObject>    ("ofd_delete_object");
     fn_add_page_           = sym<FnAddPage>         ("ofd_add_page");
     fn_save_to_file_       = sym<FnSaveToFile>      ("ofd_save_to_file");
+    fn_get_work_dir_       = sym<FnGetWorkDir>      ("ofd_get_work_dir");
 
     loaded_ = true;
 }
@@ -148,7 +149,8 @@ OfdJnaBridge::OfdJnaBridge(OfdJnaBridge&& other) noexcept
       fn_add_rect_path_(other.fn_add_rect_path_),
       fn_delete_object_(other.fn_delete_object_),
       fn_add_page_(other.fn_add_page_),
-      fn_save_to_file_(other.fn_save_to_file_) {
+      fn_save_to_file_(other.fn_save_to_file_),
+      fn_get_work_dir_(other.fn_get_work_dir_) {
     other.libHandle_ = nullptr;
     other.loaded_ = false;
 }
@@ -172,6 +174,7 @@ OfdJnaBridge& OfdJnaBridge::operator=(OfdJnaBridge&& other) noexcept {
         fn_delete_object_   = other.fn_delete_object_;
         fn_add_page_        = other.fn_add_page_;
         fn_save_to_file_    = other.fn_save_to_file_;
+        fn_get_work_dir_    = other.fn_get_work_dir_;
         other.libHandle_ = nullptr;
         other.loaded_ = false;
     }
@@ -296,6 +299,15 @@ void OfdJnaBridge::Doc::saveAs(const std::string& outputPath) {
     if (ok != 1) {
         bridge_->throwLastError(ok, "saveAs 失败: " + outputPath);
     }
+}
+
+std::string OfdJnaBridge::Doc::workDir() const {
+    if (!handle_ || !bridge_) throw OfdException(-1, "文档句柄无效");
+    void* raw = bridge_->fn_get_work_dir_(handle_);
+    if (!raw) return {};
+    std::string result(static_cast<const char*>(raw));
+    bridge_->fn_free_string_(raw);
+    return result;
 }
 
 } // namespace ofd

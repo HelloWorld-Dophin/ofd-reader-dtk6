@@ -45,6 +45,7 @@
 #include <cstdlib>
 #include <vector>
 #include <string>
+#include <set>
 #include <algorithm>
 #include <initializer_list>
 #include <cctype>
@@ -990,6 +991,24 @@ QFont fontOf(const ofd::OfdTextItem* item) {
     }
 
     QStringList families = QFontDatabase::families();
+
+    // === 诊断：打印 sysfST/CID 字体查找过程 ===
+    {
+        static std::set<std::string> printed;
+        std::string key = ofdName.toStdString();
+        if (printed.find(key) == printed.end()) {
+            printed.insert(key);
+            bool has = families.contains(ofdName, Qt::CaseInsensitive);
+            fprintf(stderr, "[Font] OFD fontName='%s' Qt_has_direct_match=%d total_families=%d\n",
+                    key.c_str(), has ? 1 : 0, families.size());
+            // 扫 families 里有没有类似 sysf 的
+            for (const auto& f : families) {
+                if (f.contains("sysf", Qt::CaseInsensitive) || f.contains("方正", Qt::CaseInsensitive)) {
+                    fprintf(stderr, "[Font]   Qt family has sysf/fangzheng: '%s'\n", f.toUtf8().constData());
+                }
+            }
+        }
+    }
 
     // ===== Step 1: 直接用 OFD 原始名查 =====
     if (families.contains(ofdName, Qt::CaseInsensitive)) {

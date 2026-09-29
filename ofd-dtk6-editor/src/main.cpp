@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
     app.setApplicationName("ofd-dtk6-editor");
     app.setOrganizationName("Kelvinxi");
     app.setApplicationDisplayName(QStringLiteral("OFD 阅读器 / 编辑器"));
-    app.setApplicationVersion("1.0.0");
+    app.setApplicationVersion("1.0.3");
 
     // ===== 统一图标：任务栏 / 窗口 / 关于窗口右侧 =====
     const QIcon appIcon(QStringLiteral(":/icons/app.svg"));

@@ -12,6 +12,7 @@
 #include <DToolButton>
 #include <DSlider>
 #include <DStyle>
+#include <DSpinBox>
 
 #include <QDockWidget>
 #include <QLabel>
@@ -582,7 +583,7 @@ static QStringList loadBundledFonts() {
         }
     }
     families.removeDuplicates();
-    fprintf(stderr, "[FontTab] total bundled families: %d\n", families.size());
+    fprintf(stderr, "[FontTab] total bundled families: %lld\n", (long long)families.size());
     return families;
 }
 
@@ -885,11 +886,11 @@ void MainWindow::buildStatusBar() {
     auto* sb = statusBar();
 
     // 页面导航区：◀ 页码滑条 ▶  页面 N/M
-    auto* prevBtn = new Dtk::Widget::DToolButton(sb);
-    prevBtn->setIcon(Dtk::Widget::DStyle::standardIcon(
-        QApplication::style(), Dtk::Widget::DStyle::SP_ArrowPrev, nullptr, prevBtn));
-    prevBtn->setToolTip(QStringLiteral("上一页 (PageUp)"));
-    sb->addPermanentWidget(prevBtn);
+    prevBtn_ = new Dtk::Widget::DToolButton(sb);
+    prevBtn_->setIcon(Dtk::Widget::DStyle::standardIcon(
+        QApplication::style(), Dtk::Widget::DStyle::SP_ArrowPrev, nullptr, prevBtn_));
+    prevBtn_->setToolTip(QStringLiteral("上一页 (PageUp)"));
+    sb->addPermanentWidget(prevBtn_);
 
     pageSlider_ = new Dtk::Widget::DSlider(Qt::Horizontal, sb);
     pageSlider_->setMinimum(1);
@@ -898,23 +899,46 @@ void MainWindow::buildStatusBar() {
     pageSlider_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     sb->addPermanentWidget(pageSlider_);
 
-    auto* nextBtn = new Dtk::Widget::DToolButton(sb);
-    nextBtn->setIcon(Dtk::Widget::DStyle::standardIcon(
-        QApplication::style(), Dtk::Widget::DStyle::SP_ArrowNext, nullptr, nextBtn));
-    nextBtn->setToolTip(QStringLiteral("下一页 (PageDown)"));
-    sb->addPermanentWidget(nextBtn);
+    nextBtn_ = new Dtk::Widget::DToolButton(sb);
+    nextBtn_->setIcon(Dtk::Widget::DStyle::standardIcon(
+        QApplication::style(), Dtk::Widget::DStyle::SP_ArrowNext, nullptr, nextBtn_));
+    nextBtn_->setToolTip(QStringLiteral("下一页 (PageDown)"));
+    sb->addPermanentWidget(nextBtn_);
 
-    pageLabel_ = new QLabel(QStringLiteral("页面: 0 / 0"), sb);
-    pageLabel_->setContentsMargins(8, 0, 8, 0);
-    sb->addPermanentWidget(pageLabel_);
+    // "页面:" + SpinBox + "/ 总数" —— 可直接输入跳转
+    pageLabelPrefix_ = new QLabel(QStringLiteral("页面:"), sb);
+    pageLabelPrefix_->setContentsMargins(8, 0, 4, 0);
+    sb->addPermanentWidget(pageLabelPrefix_);
+
+    pageSpin_ = new Dtk::Widget::DSpinBox(sb);
+    pageSpin_->setRange(1, 1);
+    pageSpin_->setValue(1);
+    pageSpin_->setFixedWidth(52);
+    pageSpin_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    pageSpin_->setButtonSymbols(QAbstractSpinBox::NoButtons);  // 隐藏上下箭头
+    pageSpin_->setToolTip(QStringLiteral("输入页码回车跳转"));
+    sb->addPermanentWidget(pageSpin_);
+
+    pageLabelSuffix_ = new QLabel(QStringLiteral("/ 0"), sb);
+    pageLabelSuffix_->setContentsMargins(4, 0, 8, 0);
+    sb->addPermanentWidget(pageLabelSuffix_);
 
     // 信号连接
-    QObject::connect(prevBtn, &Dtk::Widget::DToolButton::clicked, this, &MainWindow::onPagePrev);
-    QObject::connect(nextBtn, &Dtk::Widget::DToolButton::clicked, this, &MainWindow::onPageNext);
+    QObject::connect(prevBtn_, &Dtk::Widget::DToolButton::clicked, this, &MainWindow::onPagePrev);
+    QObject::connect(nextBtn_, &Dtk::Widget::DToolButton::clicked, this, &MainWindow::onPageNext);
+
     QObject::connect(pageSlider_, &Dtk::Widget::DSlider::valueChanged, this,
         [this](int v) {
             if (!render_) return;
             render_->setPageIndex(v - 1);   // slider 1-based → 内部 0-based
+            updatePageLabel();
+        });
+
+    // SpinBox 输入 → 跳转
+    QObject::connect(pageSpin_, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+        this, [this](int v) {
+            if (!render_) return;
+            render_->setPageIndex(v - 1);   // 1-based → 内部 0-based
             updatePageLabel();
         });
 
@@ -1026,8 +1050,20 @@ void MainWindow::showError(const QString& title, const QString& msg) {
 void MainWindow::updatePageLabel() {
     int cur = render_->pageIndex() + 1;
     int total = render_->pageCount();
-    if (pageLabel_) {
-        pageLabel_->setText(QStringLiteral("页面: %1 / %2").arg(cur).arg(total));
+
+    // 箭头禁用：首页禁左、末页禁右、单页全禁
+    if (prevBtn_) prevBtn_->setEnabled(cur > 1 && total > 1);
+    if (nextBtn_) nextBtn_->setEnabled(cur < total && total > 1);
+
+    // SpinBox —— blockSignals 避免循环触发 valueChanged
+    if (pageSpin_) {
+        pageSpin_->blockSignals(true);
+        pageSpin_->setRange(1, std::max(1, total));
+        pageSpin_->setValue(cur);
+        pageSpin_->blockSignals(false);
+    }
+    if (pageLabelSuffix_) {
+        pageLabelSuffix_->setText(QStringLiteral("/ %1").arg(total));
     }
     if (pageSlider_) {
         pageSlider_->blockSignals(true);
@@ -1058,18 +1094,8 @@ void MainWindow::onOpen() {
         QString(), QStringLiteral("OFD 文件 (*.ofd);;所有文件 (*)"));
     if (path.isEmpty()) return;
 
-    try {
-        doc_ = std::make_unique<ofd::OfdJnaBridge::Doc>(bridge_->open(path.toStdString()));
-        filePath_ = path;
-        render_->setDocument(doc_.get());
-        render_->fitToPage();
-        setWindowTitle(QStringLiteral("%1 — OFD 编辑器").arg(QFileInfo(path).fileName()));
-        statusBar()->showMessage(QStringLiteral("已打开: %1").arg(path));
-        updatePageLabel();
-        updateZoomLabel();
-    } catch (const std::exception& e) {
-        showError(QStringLiteral("打开失败"), QString::fromStdString(e.what()));
-    }
+    // ★ 统一走 openFileByPath —— 字体加载逻辑在里面（setDocument 之前必须加载！）
+    openFileByPath(path);
 }
 
 void MainWindow::openFileByPath(const QString& path) {
@@ -1078,6 +1104,48 @@ void MainWindow::openFileByPath(const QString& path) {
     try {
         doc_ = std::make_unique<ofd::OfdJnaBridge::Doc>(bridge_->open(path.toStdString()));
         filePath_ = path;
+
+        // ★★★ 关键：字体加载必须在 setDocument 之前！★★★
+        // setDocument 会触发 paintEvent，如果 Qt 还没 sysfST 字体，第一次渲染就乱码
+        // 即使后面 addApplicationFont 成功，Qt 已缓存错误字形
+        try {
+            std::string wd = doc_->workDir();
+            if (!wd.empty()) {
+                QDir workDir(QString::fromStdString(wd));
+                fprintf(stderr, "[Font] OFD workDir=%s\n", wd.c_str());
+                QStringList filters = { "*.ttf", "*.otf", "*.ttc", "*.cff" };
+                QStringList fontFiles;
+                QStringList subDirs = workDir.entryList(QDir::Dirs);
+                for (const QString& sub : subDirs) {
+                    QDir docDir(workDir.absoluteFilePath(sub));
+                    QStringList resDirs = docDir.entryList(QStringList{"Res"}, QDir::Dirs);
+                    for (const QString& rd : resDirs) {
+                        QDir resDir(docDir.absoluteFilePath(rd));
+                        QStringList more = resDir.entryList(filters, QDir::Files);
+                        for (const QString& f : more) {
+                            fontFiles.append(resDir.absoluteFilePath(f));
+                        }
+                    }
+                }
+                int loadedCount = 0;
+                for (const QString& fp : fontFiles) {
+                    int id = QFontDatabase::addApplicationFont(fp);
+                    if (id >= 0) {
+                        QStringList fams = QFontDatabase::applicationFontFamilies(id);
+                        fprintf(stderr, "[Font] loaded OFD font: %s → %s\n",
+                                fp.toUtf8().constData(),
+                                fams.join(", ").toUtf8().constData());
+                        loadedCount++;
+                    } else {
+                        fprintf(stderr, "[Font] FAILED to load OFD font: %s\n", fp.toUtf8().constData());
+                    }
+                }
+                fprintf(stderr, "[Font] OFD embedded fonts loaded: %d\n", loadedCount);
+            }
+        } catch (const std::exception& e) {
+            fprintf(stderr, "[Font] workDir/font load error: %s\n", e.what());
+        }
+
         render_->setDocument(doc_.get());
         render_->fitToPage();
         setWindowTitle(QStringLiteral("%1 — OFD 编辑器").arg(QFileInfo(path).fileName()));

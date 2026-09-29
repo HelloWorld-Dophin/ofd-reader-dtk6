@@ -5,7 +5,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
 <modelVersion>4.0.0</modelVersion>
 <groupId>com.oftdrw</groupId>
 <artifactId>ofd-jna-core</artifactId>
-<version>1.0.0</version>
+<version>1.0.3</version>
 <packaging>jar</packaging>
 <name>ofd-jna-core</name>
 <description>OFD Reader/Editor core bridge layer: ofdrw sub‑modules 2.0.2 + JNA 5.14</description>

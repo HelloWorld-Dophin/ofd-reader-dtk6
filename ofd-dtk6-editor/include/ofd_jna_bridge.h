@@ -320,7 +320,10 @@ public:
         void addPage();
 
         /** 另存为标准 OFD 文件。 */
-        void saveAs(const std::string& outputPath);
+    void saveAs(const std::string& outputPath);
+
+    /** 获取 OFD 解压后的临时工作目录（内嵌字体在 Doc_N/Res/ 下）。 */
+    std::string workDir() const;
 
     private:
         friend class OfdJnaBridge;
@@ -357,6 +360,7 @@ private:
     using FnDeleteObject   = int     (*)(int64_t, int, int);
     using FnAddPage        = int     (*)(int64_t);
     using FnSaveToFile     = int     (*)(int64_t, const char*);
+    using FnGetWorkDir     = void*   (*)(int64_t);
 
     /* ============ 成员 ============ */
     void*       libHandle_ = nullptr;   // dlopen 返回值
@@ -376,6 +380,7 @@ private:
     FnDeleteObject      fn_delete_object_     = nullptr;
     FnAddPage           fn_add_page_          = nullptr;
     FnSaveToFile        fn_save_to_file_      = nullptr;
+    FnGetWorkDir        fn_get_work_dir_      = nullptr;
 
     /* ============ 辅助 ============ */
     /** dlsym 封装，找不到符号抛异常。 */

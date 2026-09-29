@@ -89,7 +89,11 @@ protected:
 
     Dtk::Widget::DSlider*   zoomSlider_ = nullptr;
     Dtk::Widget::DSlider*   pageSlider_  = nullptr;
-    QLabel*                 pageLabel_   = nullptr;
+    Dtk::Widget::DToolButton* prevBtn_   = nullptr;
+    Dtk::Widget::DToolButton* nextBtn_   = nullptr;
+    QLabel*                     pageLabelPrefix_ = nullptr;   // "页面:"
+    Dtk::Widget::DSpinBox*      pageSpin_        = nullptr;   // 可输入页码跳转
+    QLabel*                     pageLabelSuffix_ = nullptr;   // "/ 总数"
     QLabel*                 zoomLabel_   = nullptr;
 
     // 字体设置 Tab 的四个下拉框
