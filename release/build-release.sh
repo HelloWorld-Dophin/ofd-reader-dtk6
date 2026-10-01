@@ -190,9 +190,11 @@ cp -r "$OUT_DIR"/* "$DEB_STAGING/opt/ofd-editor/"
 # /usr/bin 启动入口
 ln -sf "../../opt/ofd-editor/bin/ofd-editor" "$DEB_STAGING/usr/bin/ofd-editor"
 
-# 权限
+# 权限（二进制必须是 755，deb 才能执行）
 chmod 755 "$DEB_STAGING/opt/ofd-editor/bin/"*
 chmod 755 "$DEB_STAGING/opt/ofd-editor/jre/bin/"* 2>/dev/null || true
+# 兜底：确保 C++ 主程序一定能执行
+find "$DEB_STAGING/opt/ofd-editor/bin" -type f -exec chmod +x {} \;
 
 # 打包
 DEB_OUT="$RELEASE_DIR/out/ofd-editor_${VERSION}_${ARCH}.deb"
