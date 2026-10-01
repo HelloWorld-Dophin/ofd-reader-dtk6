@@ -5,11 +5,21 @@ case "$1" in
     configure|postinst)
         # 确保内置 JRE 和 native so 有正确权限
         if [ -d /opt/ofd-editor ]; then
+            # 目录 → 755
             find /opt/ofd-editor -type d -exec chmod 755 {} + 2>/dev/null || true
-            find /opt/ofd-editor -type f -exec chmod 644 {} + 2>/dev/null || true
-            chmod +x /opt/ofd-editor/bin/ofd-dtk6-editor 2>/dev/null || true
-            chmod +x /opt/ofd-editor/bin/ofd-editor 2>/dev/null || true
+            # JRE bin → 755（Java 可执行文件）
             chmod +x /opt/ofd-editor/jre/bin/* 2>/dev/null || true
+            # 主程序二进制 → 755（qt6 优先，dtk6 兜底）
+            chmod +x /opt/ofd-editor/bin/ofd-editor 2>/dev/null || true
+            chmod +x /opt/ofd-editor/bin/ofd-qt6-editor 2>/dev/null || true
+            chmod +x /opt/ofd-editor/bin/ofd-dtk6-editor 2>/dev/null || true
+            # 其他文件 → 644（jar、ttf、class、so 等）
+            find /opt/ofd-editor -type f \
+                ! -path '/opt/ofd-editor/bin/ofd-editor' \
+                ! -path '/opt/ofd-editor/bin/ofd-qt6-editor' \
+                ! -path '/opt/ofd-editor/bin/ofd-dtk6-editor' \
+                ! -path '/opt/ofd-editor/jre/bin/*' \
+                -exec chmod 644 {} + 2>/dev/null || true
             # 图标缓存更新
             if command -v update-desktop-database >/dev/null 2>&1; then
                 update-desktop-database /usr/share/applications 2>/dev/null || true
