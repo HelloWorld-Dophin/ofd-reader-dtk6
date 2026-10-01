@@ -1,21 +1,20 @@
 #!/bin/bash
 # ============================================================================
 # build-release.sh — 一键构建发布包（含内置 JRE，无需用户预装 Java）
-#
-# 用法:
-#   ./build-release.sh
+# 目标: ofd-qt6-editor 纯 Qt6 版（Ubuntu 24.04/24.10/26.04 通用）
 #
 # 产物:
-#   release/out/ofd-editor_amd64.deb
-#   release/out/ofd-editor/                 # 解压后内容
+#   release/out/ofd-editor_1.0.3-qt6_amd64.deb
 # ============================================================================
 
 set -e
 
 ARCH="amd64"
+VERSION="1.0.3-qt6"
 
 echo "========================================"
-echo "OFD Editor Release Builder"
+echo "OFD Editor (Qt6) Release Builder"
+echo "  版本: $VERSION"
 echo "  目标架构: $ARCH"
 echo "========================================"
 
@@ -24,7 +23,7 @@ BASE="$(cd "$(dirname "$0")/.." && pwd)"
 RELEASE_DIR="$BASE/release"
 OUT_DIR="$RELEASE_DIR/out/ofd-editor"
 
-# JDK 路径（Java 编译 + jlink）
+# JDK 路径
 JAVA17_HOME="${JAVA17_HOME:-/usr/lib/jvm/java-17-openjdk-amd64}"
 JLINK="$JAVA17_HOME/bin/jlink"
 
@@ -36,6 +35,7 @@ echo "=== Step 0: 清理 ==="
 rm -rf "$OUT_DIR"
 rm -rf "$RELEASE_DIR/jre"
 rm -rf "$RELEASE_DIR/libs"
+rm -rf "$RELEASE_DIR/deb-staging"
 
 # ============================================================================
 # Step 1: 编译
@@ -43,15 +43,14 @@ rm -rf "$RELEASE_DIR/libs"
 echo ""
 echo "=== Step 1: 编译 ==="
 
-# --- Java（全架构通用） ---
+# --- Java ---
 cd "$BASE/ofd-jna-core"
 mvn clean compile -o 2>&1 | tail -3
 
 # --- 原生 C/C++ ---
 JNI_BUILD="$BASE/ofd-jna-core-native/build"
-EDITOR_BUILD="$BASE/ofd-dtk6-editor/build"
+EDITOR_BUILD="$BASE/ofd-qt6-editor/build"
 
-# ★ 清 CMake 缓存 —— 防止增量编译跳过修改过的源文件
 rm -rf "$JNI_BUILD" "$EDITOR_BUILD"
 
 # JNI C 层
@@ -61,11 +60,11 @@ echo "--- JNI C 层 ---"
 cmake -DCMAKE_BUILD_TYPE=Release "$BASE/ofd-jna-core-native" 2>&1 | tail -5
 cmake --build . -j4 2>&1 | tail -5
 
-# DTK6 主程序
+# Qt6 主程序
 mkdir -p "$EDITOR_BUILD"
 cd "$EDITOR_BUILD"
-echo "--- DTK6 主程序 ---"
-cmake -DCMAKE_BUILD_TYPE=Release "$BASE/ofd-dtk6-editor" 2>&1 | tail -10
+echo "--- Qt6 主程序 ---"
+cmake -DCMAKE_BUILD_TYPE=Release "$BASE/ofd-qt6-editor" 2>&1 | tail -10
 cmake --build . -j4 2>&1 | tail -5
 
 # ============================================================================
@@ -96,13 +95,10 @@ echo "  ✅ JRE: $(du -sh "$RELEASE_DIR/jre" | cut -f1)"
 echo ""
 echo "=== Step 3: 收集依赖 jars ==="
 mkdir -p "$RELEASE_DIR/libs"
-cd "$RELEASE_DIR/libs"
 
-# 直接从 ~/.m2 全拉 —— 跟 dev 运行时逻辑一致，永远不会漏！
-# 之前手动枚举 38 个 vs 实际 166+，公章图片渲染依赖 twelvemonkeys / commons-compress 等
 COUNT=0
 while IFS= read -r jar; do
-    cp "$jar" .
+    cp "$jar" "$RELEASE_DIR/libs/"
     COUNT=$((COUNT + 1))
 done < <(find "$HOME/.m2/repository" -name '*.jar' 2>/dev/null \
     | grep -v sources | grep -v javadoc | grep -v tests)
@@ -120,13 +116,12 @@ mkdir -p "$OUT_DIR/java/classes"
 mkdir -p "$OUT_DIR/java/libs"
 mkdir -p "$OUT_DIR/jre"
 mkdir -p "$OUT_DIR/fonts"
-mkdir -p "$OUT_DIR/share/icons"
 
-# 产物
-cp "$EDITOR_BUILD/ofd-dtk6-editor"  "$OUT_DIR/bin/"
+# 二进制产物
+cp "$EDITOR_BUILD/ofd-qt6-editor"   "$OUT_DIR/bin/"
 cp "$JNI_BUILD/libofd-jna-core.so"  "$OUT_DIR/lib/"
 
-# Java 编译产物（跨架构通用）
+# Java 编译产物
 cp -r "$BASE/ofd-jna-core/target/classes"/* "$OUT_DIR/java/classes/" 2>/dev/null || true
 
 # 依赖 jars
@@ -135,8 +130,8 @@ cp "$RELEASE_DIR/libs"/*.jar "$OUT_DIR/java/libs/" 2>/dev/null || true
 # JRE
 cp -r "$RELEASE_DIR/jre"/* "$OUT_DIR/jre/"
 
-# 字体
-cp -r "$BASE/ofd-dtk6-editor/fonts/"* "$OUT_DIR/fonts/" 2>/dev/null || true
+# 字体（Qt6 版自带 fonts/）
+cp -r "$BASE/ofd-qt6-editor/fonts/"* "$OUT_DIR/fonts/" 2>/dev/null || true
 
 # 启动脚本
 cp "$RELEASE_DIR/ofd-editor" "$OUT_DIR/bin/"
@@ -156,15 +151,35 @@ mkdir -p "$DEB_STAGING/usr/share/applications"
 mkdir -p "$DEB_STAGING/usr/share/icons/hicolor/scalable/apps"
 mkdir -p "$DEB_STAGING/opt/ofd-editor"
 
-# control + scripts
-cp "$BASE/debian/control" "$DEB_STAGING/DEBIAN/"
+# --- 生成 QT6 专用 control（无 DTK 依赖） ---
+cat > "$DEB_STAGING/DEBIAN/control" << 'CTRL'
+Package: ofd-editor
+Version: PLACEHOLDER_VERSION
+Section: office
+Priority: optional
+Architecture: amd64
+Maintainer: Kelvinxi <kelvinxi@outlook.com>
+Depends: libqt6core6, libqt6gui6, libqt6widgets6, libgl1, libc6 (>= 2.34)
+Suggests: fonts-noto-cjk
+Description: OFD 阅读器+简易编辑器（纯 Qt6 GUI + JNA FFI）
+ 基于 Qt6 构建的 OFD 电子文档阅读器和简易编辑器。
+ 支持打开、浏览、渲染 OFD 文件，支持增值税电子普通发票
+ 完整渲染（文字、Path 细线、表格、二维码、嵌套公章）。
+ 底层使用 ofdrw 2.0.2 解析，JNA 5.14 实现 FFI 桥接。
+ 本包内置裁剪版 JRE（jlink），用户无需预装 Java。
+CTRL
+sed -i "s/PLACEHOLDER_VERSION/$VERSION/" "$DEB_STAGING/DEBIAN/control"
+
+# scripts
 cp "$BASE/debian/postinst" "$DEB_STAGING/DEBIAN/"
 cp "$BASE/debian/prerm"    "$DEB_STAGING/DEBIAN/"
 chmod 755 "$DEB_STAGING/DEBIAN/postinst" "$DEB_STAGING/DEBIAN/prerm"
 
-# desktop + 图标
+# desktop 文件
 cp "$BASE/debian/ofd-editor.desktop" "$DEB_STAGING/usr/share/applications/"
-SRC_ICON="$BASE/ofd-dtk6-editor/icons/app.svg"
+
+# 图标
+SRC_ICON="$BASE/ofd-qt6-editor/icons/app.svg"
 if [ -f "$SRC_ICON" ]; then
     cp "$SRC_ICON" "$DEB_STAGING/usr/share/icons/hicolor/scalable/apps/ofd-editor.svg"
 fi
@@ -179,11 +194,8 @@ ln -sf "../../opt/ofd-editor/bin/ofd-editor" "$DEB_STAGING/usr/bin/ofd-editor"
 chmod 755 "$DEB_STAGING/opt/ofd-editor/bin/"*
 chmod 755 "$DEB_STAGING/opt/ofd-editor/jre/bin/"* 2>/dev/null || true
 
-# 修改 control 里的 Architecture 字段
-sed -i 's/^Architecture:.*/Architecture: amd64/' "$DEB_STAGING/DEBIAN/control"
-
 # 打包
-DEB_OUT="$RELEASE_DIR/out/ofd-editor_1.0.3_${ARCH}.deb"
+DEB_OUT="$RELEASE_DIR/out/ofd-editor_${VERSION}_${ARCH}.deb"
 if command -v fakeroot >/dev/null 2>&1; then
     fakeroot dpkg-deb --build --root-owner-group "$DEB_STAGING" "$DEB_OUT"
 else
@@ -197,7 +209,7 @@ rm -rf "$DEB_STAGING"
 # ============================================================================
 echo ""
 echo "========================================"
-echo "✅ 构建完成 ($ARCH)"
+echo "✅ 构建完成 ($ARCH / $VERSION)"
 echo "========================================"
 echo "deb 包: $DEB_OUT ($(du -sh "$DEB_OUT" 2>/dev/null | cut -f1 || echo 'N/A'))"
 echo "发布目录: $OUT_DIR"
@@ -207,7 +219,7 @@ echo "目录结构:"
 du -sh "$OUT_DIR"/*/ 2>/dev/null
 echo ""
 echo "=== 产物架构验证 ==="
-file "$OUT_DIR/bin/ofd-dtk6-editor"
+file "$OUT_DIR/bin/ofd-qt6-editor"
 file "$OUT_DIR/lib/libofd-jna-core.so"
 if [ -x "$OUT_DIR/jre/bin/java" ]; then
     file "$OUT_DIR/jre/bin/java"

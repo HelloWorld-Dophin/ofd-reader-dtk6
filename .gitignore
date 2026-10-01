@@ -50,3 +50,9 @@ replay_pid*.log
 # --- 临时文件 ---
 *.log
 *.tmp
+
+# release build artifacts
+release/out/
+release/jre/
+release/libs/
+release/deb-staging/
