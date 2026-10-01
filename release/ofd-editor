@@ -63,5 +63,15 @@ if [ -d "$APP_HOME/fonts" ]; then
     export OFD_EDITOR_FONTS="$APP_HOME/fonts"
 fi
 
-# --- 6. 启动 DTK6 C++ 主程序 ---
-exec "$APP_HOME/bin/ofd-dtk6-editor" "$@"
+# --- 6. 启动 Qt6 C++ 主程序 ---
+# 优先试 qt6 名，fallback 旧 dtk6 名（兼容历史 deb）
+BIN=""
+if [ -x "$APP_HOME/bin/ofd-qt6-editor" ]; then
+    BIN="$APP_HOME/bin/ofd-qt6-editor"
+elif [ -x "$APP_HOME/bin/ofd-dtk6-editor" ]; then
+    BIN="$APP_HOME/bin/ofd-dtk6-editor"
+else
+    echo "[ofd-editor] 错误: 找不到可执行文件 ($APP_HOME/bin/ofd-qt6-editor 或 ofd-dtk6-editor)" >&2
+    exit 1
+fi
+exec "$BIN" "$@"
