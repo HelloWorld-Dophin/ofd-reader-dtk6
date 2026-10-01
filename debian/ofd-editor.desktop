@@ -11,4 +11,4 @@ Icon=ofd-editor
 Terminal=false
 Categories=Office;Graphics;Viewer;Editor;MimeType=application/ofd;application/octet-stream;
 StartupNotify=true
-StartupWMClass=ofd-dtk6-editor
+StartupWMClass=ofd-editor

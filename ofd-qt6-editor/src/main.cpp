@@ -16,7 +16,8 @@ int main(int argc, char* argv[]) {
     QApplication::setStyle("Fusion");
 
     QApplication app(argc, argv);
-    app.setApplicationName("ofd-qt6-editor");
+    app.setApplicationName("ofd-editor");        // ← 和 .desktop 文件名对齐
+    app.setDesktopFileName("ofd-editor");        // ★ GNOME/KDE 任务栏图标匹配靠这个
     app.setOrganizationName("Kelvinxi");
     app.setApplicationDisplayName(QStringLiteral("OFD 阅读器 / 编辑器"));
     app.setApplicationVersion("1.0.3");
