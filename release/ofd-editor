@@ -64,14 +64,24 @@ if [ -d "$APP_HOME/fonts" ]; then
 fi
 
 # --- 6. 启动 Qt6 C++ 主程序 ---
-# 优先试 qt6 名，fallback 旧 dtk6 名（兼容历史 deb）
+# 优先试 qt6 名，fallback 旧 dtk6 名。文件存在就自动补执行权限（防打包遗漏）
 BIN=""
-if [ -x "$APP_HOME/bin/ofd-qt6-editor" ]; then
-    BIN="$APP_HOME/bin/ofd-qt6-editor"
-elif [ -x "$APP_HOME/bin/ofd-dtk6-editor" ]; then
-    BIN="$APP_HOME/bin/ofd-dtk6-editor"
-else
-    echo "[ofd-editor] 错误: 找不到可执行文件 ($APP_HOME/bin/ofd-qt6-editor 或 ofd-dtk6-editor)" >&2
+for candidate in "$APP_HOME/bin/ofd-qt6-editor" "$APP_HOME/bin/ofd-dtk6-editor"; do
+    if [ -f "$candidate" ]; then
+        # 如果没执行权限，自动补上（不需要 sudo，自己的文件自己改）
+        [ -x "$candidate" ] || chmod +x "$candidate" 2>/dev/null || true
+        BIN="$candidate"
+        break
+    fi
+done
+
+if [ -z "$BIN" ]; then
+    echo "[ofd-editor] 错误: 找不到可执行文件" >&2
+    echo "  搜索路径: $APP_HOME/bin/ofd-qt6-editor 或 ofd-dtk6-editor" >&2
+    echo "  APP_HOME=$APP_HOME" >&2
+    echo "  ls -la $APP_HOME/bin/:" >&2
+    ls -la "$APP_HOME/bin/" >&2 2>&1 || true
     exit 1
 fi
+
 exec "$BIN" "$@"
