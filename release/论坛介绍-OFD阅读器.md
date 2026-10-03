@@ -1,31 +1,20 @@
-# 🎉 OFD 阅读器（编辑器）— Deepin DTK6 原生应用 发布啦！
+# 🎉 OFD 阅读器（编辑器）— Deepin DTK6 原生应用
 
 > 一款基于 **Deepin Tool Kit 6** 构建的 OFD 电子文档阅读器和简易编辑器，零预装依赖，下载即用。
-> 
-> **🚀开源地址：https://github.com/HelloWorld-Dophin/ofd-reader-dtk6**
+>
+> **🚀开源地址：<https://github.com/HelloWorld-Dophin/ofd-reader-dtk6>**
 
 ## **📷️运行截图：**
 
-![image.png](https://storage.deepin.org/thread/202609261238142059_image.png)
+![image.png](https://storage.deepin.org/thread/202609270321444622_image.png)
 
-## 🚀 立即下载：Deepin/UOS 安装包（88MB，含内置 JRE + 字体 + 所有依赖）
-
-> 👇 **点击下方链接，一键安装！无需预装 Java！**
-
-| 📖下载平台           | 📦 下载项                                                                                          |
-| -------------------- | -------------------------------------------------------------------------------------------------- |
-| 🚀蓝奏云   密码:1ohf | **[ofd-editor\_1.0.0\_amd64.deb](https://kelvinxi.lanzouq.com/iVeCW4a0606h "蓝奏云")**             |
-| 123云盘              | **[ofd-editor_1.0.0_amd64.deb](https://1846023722.share.123pan.cn/123pan/kASqTd-UoTw3 "123网盘")** |
-| 夸克网盘             | **[ofd-editor\_1.0.0\_amd64.deb](https://pan.quark.cn/s/2c5c7238786f "夸克网盘")**                 |
-| 🚀阿里云盘           | **[ofd-editor\_1.0.0\_amd64.deb](https://www.alipan.com/s/vmgrz75Eoxo "阿里云盘")**                |
-
-安装命令：
+## 🚀 安装命令：Deepin/UOS 安装包（88MB，含内置 JRE + 字体 + 所有依赖）
 
 ```bash
 sudo dpkg -i ofd-editor_1.0.0_amd64.deb
 ```
 
----
+***
 
 ## 📖 关于 OFD
 
@@ -40,27 +29,27 @@ OFD（Open Fixed-layout Document）是我国自主可控的电子文档版式国
 
 ### 📚 文档渲染
 
-| 特性                                       | 状态        |
-| ------------------------------------------ | ----------- |
-| 文字对象（TextObject）渲染                 | ✅ 完整支持 |
-| 路径对象（PathObject）细线、填充、渐变色   | ✅ 完整支持 |
-| 图像对象（ImageObject）含 JBIG2 压缩       | ✅ 完整支持 |
+| 特性                               | 状态     |
+| -------------------------------- | ------ |
+| 文字对象（TextObject）渲染               | ✅ 完整支持 |
+| 路径对象（PathObject）细线、填充、渐变色        | ✅ 完整支持 |
+| 图像对象（ImageObject）含 JBIG2 压缩      | ✅ 完整支持 |
 | 表格（使用 Path 细线模拟）                 | ✅ 正确对齐 |
 | 嵌套印章 / 签名注解（SignatureAnnotation） | ✅ 完整支持 |
-| 多页浏览、翻页、页面切换                   | ✅          |
-| 缩放（25% - 400%，含"适合宽度/高度/页面"） | ✅          |
-| 页面旋转（90° 步进）                      | ✅          |
-| 高 DPI 自适应                              | ✅          |
+| 多页浏览、翻页、页面切换                     | ✅      |
+| 缩放（25% - 400%，含"适合宽度/高度/页面"）     | ✅      |
+| 页面旋转（90° 步进）                     | ✅      |
+| 高 DPI 自适应                        | ✅      |
 
 ### ✏️ ~~编辑能力~~（正在开发）
 
-| ~~特性~~                                       | ~~状态~~ |
-| ----------------------------------------------- | --------- |
-| ~~文字对象属性编辑（字体 / 字号 / 颜色）~~     | ~~✅~~   |
-| ~~图形元素属性编辑（填充色 / 描边色 / 线宽）~~ | ~~✅~~   |
-| ~~选中元素（鼠标框选 + 点击命中）~~            | ~~✅~~   |
-| ~~页面元素列表展示（便于精确定位）~~           | ~~✅~~   |
-| ~~另存为新 OFD 文件~~                          | ~~✅~~   |
+| ~~特性~~                       | ~~状态~~ |
+| ---------------------------- | ------ |
+| ~~文字对象属性编辑（字体 / 字号 / 颜色）~~   | ~~✅~~  |
+| ~~图形元素属性编辑（填充色 / 描边色 / 线宽）~~ | ~~✅~~  |
+| ~~选中元素（鼠标框选 + 点击命中）~~        | ~~✅~~  |
+| ~~页面元素列表展示（便于精确定位）~~         | ~~✅~~  |
+| ~~另存为新 OFD 文件~~              | ~~✅~~  |
 
 ### 🎨 界面体验
 
@@ -69,7 +58,7 @@ OFD（Open Fixed-layout Document）是我国自主可控的电子文档版式国
 - **内置 8 款开源字体**：发布包自带（ZhenKai\_GBK、SimXiHei Plus、SimZhiSong、Zhuque Fangsong、Liberation Mono 系列），无需系统预装
 - **深色 / 浅色主题自适应**：跟随系统切换
 
----
+***
 
 ## 🏗️ 技术架构
 
@@ -105,14 +94,14 @@ OFD（Open Fixed-layout Document）是我国自主可控的电子文档版式国
 
 ### 技术栈一览
 
-| 层级     | 技术                         | 说明                                              |
-| -------- | ---------------------------- | ------------------------------------------------- |
-| GUI      | **DTK6 + Qt 6.8**      | Deepin Tool Kit 6，原生 C++ 组件                  |
-| FFI      | **JNA 5.14**           | Java ↔ C 跨语言调用                              |
-| 原生桥接 | **JNI C**              | ofd\_jna\_wrapper.c + ofd\_jna\_bridge.cpp        |
-| OFD 解析 | **ofdrw-full 2.0.2**   | org.ofdrw 官方开源库（禁止使用 com.github.ofdrw） |
-| JRE      | **OpenJDK 17 + jlink** | 裁剪后仅\~50MB，随软件分发                        |
-| 打包     | **dpkg-deb**           | 纯二进制打包，含内置 JRE + 所有依赖               |
+| 层级     | 技术                     | 说明                                         |
+| ------ | ---------------------- | ------------------------------------------ |
+| GUI    | **DTK6 + Qt 6.8**      | Deepin Tool Kit 6，原生 C++ 组件                |
+| FFI    | **JNA 5.14**           | Java ↔ C 跨语言调用                             |
+| 原生桥接   | **JNI C**              | ofd\_jna\_wrapper.c + ofd\_jna\_bridge.cpp |
+| OFD 解析 | **ofdrw-full 2.0.2**   | org.ofdrw 官方开源库（禁止使用 com.github.ofdrw）     |
+| JRE    | **OpenJDK 17 + jlink** | 裁剪后仅\~50MB，随软件分发                           |
+| 打包     | **dpkg-deb**           | 纯二进制打包，含内置 JRE + 所有依赖                      |
 
 ### 🔑 几个关键设计决策
 
@@ -157,7 +146,7 @@ export LD_LIBRARY_PATH="$APP_HOME/jre/lib/server:$APP_HOME/lib:$LD_LIBRARY_PATH"
 - `./fonts`（开发版）
 - `$OFD_EDITOR_FONTS`（环境变量覆盖）
 
----
+***
 
 ## 📦 安装 & 运行
 
@@ -208,21 +197,21 @@ deb 包体积 \~88MB，包含：
 # 或双击桌面图标 / 任务栏点击 / 开始菜单搜索 "OFD"
 ```
 
----
+***
 
 ## 🖼️ 渲染质量对比
 
 ### 测试用例：国家税务总局增值税电子普通发票
 
-| 项目                | 官方阅读器 | 本项目 | 说明                             |
-| ------------------- | ---------- | ------ | -------------------------------- |
-| Path 表格细线       | ✅         | ✅     | 位置、粗细、颜色一致             |
-| 二维码图片（JBIG2） | ✅         | ✅     | 完整显示                         |
-| 红色税务监制章      | ✅         | ✅     | 位置、颜色对齐                   |
-| 中文字体渲染        | ✅         | ✅     | 字体别名映射 + 内置字体 fallback |
-| 渐变色填充          | ✅         | ✅     | Path 的 Gradient 解析完整        |
+| 项目           | 官方阅读器 | 本项目 | 说明                     |
+| ------------ | ----- | --- | ---------------------- |
+| Path 表格细线    | ✅     | ✅   | 位置、粗细、颜色一致             |
+| 二维码图片（JBIG2） | ✅     | ✅   | 完整显示                   |
+| 红色税务监制章      | ✅     | ✅   | 位置、颜色对齐                |
+| 中文字体渲染       | ✅     | ✅   | 字体别名映射 + 内置字体 fallback |
+| 渐变色填充        | ✅     | ✅   | Path 的 Gradient 解析完整   |
 
----
+***
 
 ## 🚧 当前限制
 
@@ -231,7 +220,7 @@ deb 包体积 \~88MB，包含：
 - ~~⚠️ 编辑功能为"简易"级别（主要解决渲染 + 属性编辑 + 另存为），非完整 OFD 编辑器~~
 - ⚠️ Windows / macOS 暂未适配（当前仅限 Deepin/UOS Linux x64）
 
----
+***
 
 ## 🗺️ 未来计划
 
@@ -242,15 +231,15 @@ deb 包体积 \~88MB，包含：
 - [ ] 最近打开列表（QSettings）
 - [ ] 插件化架构（支持自定义渲染器 / 编辑器）
 
----
+***
 
 ## 🤝 贡献
 
 欢迎反馈问题！
 
-- 博客：[https://www.cnblogs.com/Kelvinxi/](https://www.cnblogs.com/Kelvinxi/)
+- 博客：<https://www.cnblogs.com/Kelvinxi/>
 - 邮件：`kelvinxi@outlook.com`
-- 开源地址：[https://github.com/HelloWorld-Dophin/ofd-reader-dtk6](https://github.com/HelloWorld-Dophin/ofd-reader-dtk6)
+- 开源地址：<https://github.com/HelloWorld-Dophin/ofd-reader-dtk6>
 
 ## 📄 开源许可
 
@@ -263,10 +252,11 @@ deb 包体积 \~88MB，包含：
 - DTK6（LGPL 3.0）
 - 内置字体：ZhenKai\_GBK / SimXiHei Plus / SimZhiSong / Zhuque Fangsong / Liberation Mono（均为开源免费字体）
 
----
+***
 
 ## 💖 致谢
 
 - **ofdrw** 开源作者 —— 优秀的 OFD Java 库，让我们不用手写 XML/ZIP 解析
 - **Deepin DTK6** 团队 —— 原生 C++ 桌面框架，让 Deepin 应用开发体验接近 Qt 原生
 - **JNA 社区** —— 跨语言 FFI 的标准方案
+

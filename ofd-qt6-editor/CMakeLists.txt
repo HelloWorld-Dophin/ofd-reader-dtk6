@@ -5,7 +5,7 @@
 # 依赖：Qt6 (Core Gui Widgets)、libdl (JNI 动态加载)
 # ============================================================================
 cmake_minimum_required(VERSION 3.16)
-project(ofd-qt6-editor LANGUAGES CXX VERSION 1.0.3)
+project(ofd-qt6-editor LANGUAGES CXX VERSION 1.0.4)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

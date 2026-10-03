@@ -6,7 +6,7 @@
 
 ## **📷️运行截图：**
 
-![image.png](https://storage.deepin.org/thread/202610020538222910_image_20261001_164722_413.png)
+![qt6-screenshot.png](assets/screenshots/qt6-screenshot.png)
 
 ## 🚀 安装命令：通用 Linux 安装包（103MB，含内置 JRE + 字体 + 所有依赖）
 

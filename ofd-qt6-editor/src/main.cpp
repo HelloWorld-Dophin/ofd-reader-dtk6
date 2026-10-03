@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
     app.setDesktopFileName("ofd-editor");        // ★ GNOME/KDE 任务栏图标匹配靠这个
     app.setOrganizationName("Kelvinxi");
     app.setApplicationDisplayName(QStringLiteral("OFD 阅读器 / 编辑器"));
-    app.setApplicationVersion("1.0.3");
+    app.setApplicationVersion("1.0.4");
 
     const QIcon appIcon(QStringLiteral(":/icons/app.svg"));
     app.setWindowIcon(appIcon);

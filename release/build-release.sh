@@ -4,13 +4,13 @@
 # 目标: ofd-qt6-editor 纯 Qt6 版（Ubuntu 24.04/24.10/26.04 通用）
 #
 # 产物:
-#   release/out/ofd-editor_1.0.3-qt6_amd64.deb
+#   release/out/ofd-editor_1.0.4-qt6_amd64.deb
 # ============================================================================
 
 set -e
 
 ARCH="amd64"
-VERSION="1.0.3-qt6"
+VERSION="1.0.4-qt6"
 
 echo "========================================"
 echo "OFD Editor (Qt6) Release Builder"

@@ -1,4 +1,10 @@
-ofd-editor (1.0.3) unstable; urgency=medium
+ofd-editor (1.0.4) unstable; urgency=medium
+
+  * 修复公章位置：优先用 Signature.xml StampAnnot Boundary（OFD 规范左上角坐标），不再用翻错的 Annotation.xml Appearance Boundary
+  * Qt6 任务栏图标：setDesktopFileName + StartupWMClass 对齐 ofd-editor
+  * 主题修复：不换 style 只换 QPalette + icon tint，Fusion 风格完美尊重 QPalette
+
+
 
   * 修复非首页乱码：OFD 打开后自动扫描 Doc_N/Res/ 加载内嵌 CID 字体（sysfST 等）到 QFontDatabase
   * 状态栏：页码 SpinBox 去上下箭头 + 联动 Slider/箭头按钮禁用状态

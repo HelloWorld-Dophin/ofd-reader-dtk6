@@ -187,6 +187,19 @@ public final class OFDPageParser {
      * 解析签章元素（OFD appearance 包），把内部的 Text/Path/Image
      * 作为额外元素叠加到主页面，坐标平移到签章 Boundary 位置。
      * 这样签章文字可以被点击命中、复制、编辑。
+     *
+     * 关键：两个 Boundary 来源坐标原点不同！
+     * ────────────────────────────────────────────────────────────────
+     * Signature.xml  StampAnnot Boundary (ST_Box)
+     *   OFD 规范："印章外边框矩形的左上角坐标" — ★ 已经是左上角原点，不需要翻！
+     *   例: Boundary="90.00 8.00 30.00 20.00" → 左上角 (90, 8)，30×20
+     *
+     * Annotation.xml  Appearance Boundary (ST_Box)
+     *   OFD ST_Box 规范：左下角原点 — ★ 需要翻成左上角！
+     *   例: Boundary="4.5 104 115 20" → 翻后 topY = pageH - 104 - 20 = 16
+     * ────────────────────────────────────────────────────────────────
+     *
+     * 优先用 StampAnnot Boundary（正确位置），fallback Appearance Boundary。
      */
     private static void collectSignatureElements(OFDReader reader, int pageNo, double mainPageWidth, double mainPageHeight,
                                                   List<Pointer> textPtrs,
@@ -197,78 +210,109 @@ public final class OFDPageParser {
             List<org.ofdrw.reader.model.StampAnnotEntity> stamps = reader.getStampAnnots();
             if (stamps == null) return;
 
-            // ==== 预读 Annotation.xml 里当前页面的所有 Stamp Annot Appearance Boundary ====
-            // Signature.xml 的 StampAnnot Boundary 是签名引用位置（错误！如 90,8），
-            // Annotation.xml 的 Appearance Boundary 是预留渲染区域（如 4.5 104 115 20）
-            // 公章 nested OFD 有自己的页面大小（如 30×20），需要在 Appearance 区域内居中放置
-            Double appearanceBx = null, appearanceBy = null;
-            double appearanceBw = 0.0, appearanceBh = 0.0;
-            try {
-                List<org.ofdrw.reader.model.AnnotionEntity> annots = reader.getAnnotationEntities();
-                if (annots != null) {
-                    for (org.ofdrw.reader.model.AnnotionEntity ae : annots) {
-                        if (ae == null) continue;
-                        // pageId 可能是 "1"（从1开始）或内部 ID，做宽松匹配
-                        String pid = ae.getPageId();
-                        boolean pageMatch = false;
-                        if (pid != null) {
-                            try { pageMatch = Integer.parseInt(pid) == pageNo; }
-                            catch (NumberFormatException ignored) {}
-                            if (!pageMatch) pageMatch = pid.equals(String.valueOf(pageNo));
-                        }
-                        if (!pageMatch && pageNo == 1 && (pid == null || pid.equals("1"))) {
-                            pageMatch = true; // 默认 page 1 兜底
-                        }
-                        if (!pageMatch) continue;
-
-                        List<org.ofdrw.core.annotation.pageannot.Annot> list = ae.getAnnots();
-                        if (list == null) continue;
-                        for (org.ofdrw.core.annotation.pageannot.Annot a : list) {
-                            if (a == null) continue;
-                            // 找 Type=Stamp 的 Annot
-                            Object type = a.getType();
-                            String typeStr = type != null ? type.toString() : "";
-                            if (!typeStr.contains("Stamp") && !typeStr.contains("STAMP")) continue;
-
-                            org.ofdrw.core.annotation.pageannot.Appearance app = a.getAppearance();
-                            if (app == null) continue;
-                            org.ofdrw.core.basicType.ST_Box b = app.getBoundary();
-                            if (b == null) continue;
-                            Double ax = b.getTopLeftX();
-                            Double ay = b.getTopLeftY();
-                            Double aw = b.getWidth();
-                            Double ah = b.getHeight();
-                            if (ax == null || ay == null) continue;
-                            // ★ 关键：Appearance 是预留区域，公章需要在区域内居中
-                            // 先记录原始 Appearance Boundary，等下拿到 nested OFD 大小后再居中
-                            appearanceBx = ax;
-                            appearanceBy = ay;
-                            appearanceBw = aw != null ? aw : 0.0;
-                            appearanceBh = ah != null ? ah : 0.0;
-                            System.err.println("[Stamp] Annotation.xml Appearance Boundary=("
-                                + ax + "," + ay + "," + aw + "x" + ah + ")");
-                        }
-                    }
-                }
-            } catch (Throwable t) {
-                System.err.println("[Stamp] Annotation lookup failed (ok): " + t.getMessage());
-            }
-
             for (org.ofdrw.reader.model.StampAnnotEntity entity : stamps) {
                 if (entity == null) continue;
                 try {
                     byte[] rawBytes = entity.getImageByte();
                     if (rawBytes == null || rawBytes.length == 0) continue;
 
-                    // 判断类型
                     String imgType = entity.getImgType();
+
+                    // ===== 1. 优先用 StampAnnot Boundary（Signature.xml，左上角原点，不翻）=====
+                    Double stampX = null, stampY = null;
+                    double stampW = 0.0, stampH = 0.0;
+                    String posSource = "";
+                    try {
+                        java.util.List<org.ofdrw.core.signatures.appearance.StampAnnot> saList =
+                            entity.getStampAnnots();
+                        if (saList != null) {
+                            for (org.ofdrw.core.signatures.appearance.StampAnnot sa : saList) {
+                                if (sa == null) continue;
+                                org.ofdrw.core.basicType.ST_Box b = sa.getBoundary();
+                                if (b == null) continue;
+                                Double ax = b.getTopLeftX();
+                                Double ay = b.getTopLeftY();
+                                Double aw = b.getWidth();
+                                Double ah = b.getHeight();
+                                if (ax == null || ay == null) continue;
+                                // ★ StampAnnot Boundary：OFD 规范明确定义为"左上角坐标"
+                                // 直接用！不翻！不居中！这就是印章精确位置！
+                                stampX = ax;
+                                stampY = ay;
+                                stampW = aw != null ? aw : 0.0;
+                                stampH = ah != null ? ah : 0.0;
+                                posSource = "StampAnnot";
+                                System.err.println("[Stamp] ✅ Signature.xml StampAnnot Boundary=("
+                                    + ax + "," + ay + "," + aw + "x" + ah + ") 左上角原点，不翻");
+                                break;
+                            }
+                        }
+                    } catch (Throwable t) {
+                        System.err.println("[Stamp] StampAnnot lookup failed (ok): " + t.getMessage());
+                    }
+
+                    // ===== 2. Fallback：Appearance Boundary（Annotation.xml，左下角原点，需要翻）=====
+                    if (stampX == null) {
+                        try {
+                            List<org.ofdrw.reader.model.AnnotionEntity> annots = reader.getAnnotationEntities();
+                            if (annots != null) {
+                                for (org.ofdrw.reader.model.AnnotionEntity ae : annots) {
+                                    if (ae == null) continue;
+                                    String pid = ae.getPageId();
+                                    boolean pageMatch = false;
+                                    if (pid != null) {
+                                        try { pageMatch = Integer.parseInt(pid) == pageNo; }
+                                        catch (NumberFormatException ignored) {}
+                                        if (!pageMatch) pageMatch = pid.equals(String.valueOf(pageNo));
+                                    }
+                                    if (!pageMatch && pageNo == 1 && (pid == null || pid.equals("1"))) pageMatch = true;
+                                    if (!pageMatch) continue;
+
+                                    List<org.ofdrw.core.annotation.pageannot.Annot> list = ae.getAnnots();
+                                    if (list == null) continue;
+                                    for (org.ofdrw.core.annotation.pageannot.Annot a : list) {
+                                        if (a == null) continue;
+                                        Object type = a.getType();
+                                        String typeStr = type != null ? type.toString() : "";
+                                        if (!typeStr.contains("Stamp") && !typeStr.contains("STAMP")) continue;
+                                        org.ofdrw.core.annotation.pageannot.Appearance app = a.getAppearance();
+                                        if (app == null) continue;
+                                        org.ofdrw.core.basicType.ST_Box b = app.getBoundary();
+                                        if (b == null) continue;
+                                        Double ax = b.getTopLeftX();
+                                        Double ay = b.getTopLeftY();
+                                        Double aw = b.getWidth();
+                                        Double ah = b.getHeight();
+                                        if (ax == null || ay == null) continue;
+                                        // ST_Box Appearance：左下角原点 → 翻成左上角
+                                        stampX = ax;
+                                        stampY = mainPageHeight - ay - (ah != null ? ah : 0.0);
+                                        stampW = aw != null ? aw : 0.0;
+                                        stampH = ah != null ? ah : 0.0;
+                                        posSource = "Appearance(flipped)";
+                                        System.err.println("[Stamp] ⚠️ Fallback Appearance Boundary=("
+                                            + ax + "," + ay + "," + aw + "x" + ah + ") 翻后 topY=" + stampY);
+                                        break;
+                                    }
+                                }
+                            }
+                        } catch (Throwable t) {
+                            System.err.println("[Stamp] Appearance lookup failed: " + t.getMessage());
+                        }
+                    }
+
+                    if (stampX == null) {
+                        System.err.println("[Stamp] ❌ 找不到任何 Boundary！跳过");
+                        continue;
+                    }
+
                     System.err.println("[Stamp] imgType=" + imgType + " bytes=" + rawBytes.length
-                        + " appearance=(" + appearanceBx + "," + appearanceBy + "," + appearanceBw + "x" + appearanceBh + ")");
+                        + " 使用 " + posSource + " 位置=(" + stampX + "," + stampY + ") size=" + stampW + "x" + stampH);
 
                     if ("ofd".equalsIgnoreCase(imgType)
                             || (rawBytes.length >= 4 && rawBytes[0] == 'P' && rawBytes[1] == 'K')) {
-                        // 嵌套 OFD → 解压 → 打开 → 解析元素 + 居中放置到 Appearance 区域
-                        overlayStampOfd(rawBytes, appearanceBx, appearanceBy, appearanceBw, appearanceBh,
+                        // 嵌套 OFD → 解压 → 打开 → 解析元素 + 放置到 StampAnnot 精确位置
+                        overlayStampOfd(rawBytes, stampX, stampY, stampW, stampH,
                             mainPageWidth, mainPageHeight, textPtrs, imagePtrs, pathPtrs, allocs);
                     }
                 } catch (Throwable t) {
@@ -280,11 +324,14 @@ public final class OFDPageParser {
 
     /**
      * 解压签章嵌套 OFD → 用 OFDReader 打开第一页 → 把 Text/Path/Image
-     * 叠加到主页面，**在 Appearance Boundary 区域内居中放置**。
+     * 叠加到主页面，坐标平移到传入的 stampX/stampY（左上角原点）。
+     *
+     * stampX/stampY 已经是正确的左上角坐标（来自 StampAnnot Boundary 或
+     * 翻后的 Appearance Boundary），不需要再翻，也不需要居中。
      */
     private static void overlayStampOfd(byte[] zipBytes,
-                                        Double appX, Double appY,
-                                        double appW, double appH,
+                                        Double stampX, Double stampY,
+                                        double stampBoxW, double stampBoxH,
                                         double mainPageWidth, double mainPageHeight,
                                         List<Pointer> textPtrs,
                                         List<Pointer> imagePtrs,
@@ -297,26 +344,15 @@ public final class OFDPageParser {
                  java.util.zip.ZipInputStream zis = new java.util.zip.ZipInputStream(bis)) {
                 java.util.zip.ZipEntry entry;
                 while ((entry = zis.getNextEntry()) != null) {
-                    // OFD.xml 是入口，解压整个包为 byte[]（用 OFDReader 自己能处理的格式）
-                    if ("OFD.xml".equalsIgnoreCase(entry.getName())) {
-                        // 我们需要整个 ZIP 包给 OFDReader
-                        // 不 break，读完所有
-                    }
                     zis.closeEntry();
                 }
             }
 
-            // OFDReader 可以直接从 ZIP byte[] 打开（它本身 OFD 就是 ZIP）
-            // 把 stamp ZIP 写成 ByteArrayInputStream
             java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream(zipBytes);
-            // 注意：OFDReader 构造器接受 Path，我们需要走 Reader 的 open 逻辑
-            // 用 org.ofdrw.reader.OFDReader 的 InputStream 构造器
             org.ofdrw.reader.OFDReader stampReader;
             try {
                 stampReader = new org.ofdrw.reader.OFDReader(bais);
             } catch (NoSuchMethodError nsme) {
-                // 没有 InputStream 构造器 → 写临时文件
-                System.err.println("[Stamp] no InputStream ctor, fallback tmp file");
                 java.io.File tmp = java.io.File.createTempFile("stamp_", ".ofd");
                 try (java.io.FileOutputStream fos = new java.io.FileOutputStream(tmp)) {
                     fos.write(zipBytes);
@@ -330,7 +366,6 @@ public final class OFDPageParser {
             System.err.println("[Stamp] nested OFD pages=" + pageCount);
             if (pageCount <= 0) { stampReader.close(); return; }
 
-            // 解析第一页（签章只有一页）
             Page stampPage = stampReader.getPage(1);
             if (stampPage != null) {
                 org.ofdrw.core.basicType.ST_Box stampPageSize = stampReader.getPageSize(stampPage);
@@ -338,25 +373,14 @@ public final class OFDPageParser {
                 double stampW = stampPageSize != null ? stampPageSize.getWidth() : 30.0;
                 double stampH = stampPageSize != null ? stampPageSize.getHeight() : 20.0;
 
-                // ★ Appearance Boundary Y 是 OFD 原生左下角原点坐标（OfdRW 不翻 Annotation）
-                // ST_Box.getTopLeftY() 返回的是框左下角 Y（原点在页面底部）
-                // 框的左上角 Y（左上角原点）= pageHeight - nativeY - boxHeight
-                // 例: appY=104, appH=20 → flippedTop = 140-104-20 = 16mm (从顶部算)
-                double flippedAppTop = (appY != null ? mainPageHeight - appY - appH : 0.0);
-
-                // ★ 水平位置：Appearance 框太宽(115mm)覆盖近半页，其中心(62mm)≠页面中心(105mm)
-                // 数科OFD公章盖在标题正下方=页面水平居中！用 mainPageWidth 居中
-                // 水平居中：公章中心 = 页面中心
-                double finalStampX = (mainPageWidth - stampW) / 2.0;
-                // 垂直居中：在翻转后的 Appearance 框内
-                double finalStampY = flippedAppTop;
-                if (appH > 0 && stampH > 0) finalStampY += (appH - stampH) / 2.0;
-                System.err.printf("[Stamp] centered: pageW=%.1f pageH=%.1f app(%.1f,%.1f→flipTop=%.1f,%.0fx%.0f) stamp(%.0fx%.0f) → final(%.2f,%.2f)%n",
-                    mainPageWidth, mainPageHeight,
-                    (appX != null ? appX : 0), (appY != null ? appY : 0), flippedAppTop, appW, appH,
+                // ★ 直接用传入的 stampX/stampY（已经是左上角原点，正确位置）
+                // 不再翻转 Y，不再居中！OFD 规范 StampAnnot Boundary 就是精确位置
+                double finalStampX = (stampX != null ? stampX : 0.0);
+                double finalStampY = (stampY != null ? stampY : 0.0);
+                System.err.printf("[Stamp] final pos: stampBox(%.1f,%.1f,%.0fx%.0f) nestedPage(%.0fx%.0f) → (%.2f,%.2f) 左上角原点，不翻不居中%n",
+                    stampX != null ? stampX : 0, stampY != null ? stampY : 0, stampBoxW, stampBoxH,
                     stampW, stampH, finalStampX, finalStampY);
 
-                // 只解析公章主层，跳过模板层（公章嵌套 OFD 一般没有独立模板，避免重复渲染）
                 int textBefore = textPtrs.size();
                 int pathBefore = pathPtrs.size();
                 int imgBefore  = imagePtrs.size();
