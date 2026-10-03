@@ -6,7 +6,7 @@
 
 ## **📷️运行截图：**
 
-![image.png](https://storage.deepin.org/thread/202609270321444622_image.png)
+![dtk6-screenshot.png](assets/screenshots/dtk6-screenshot.png)
 
 ## 🚀 安装命令：Deepin/UOS 安装包（88MB，含内置 JRE + 字体 + 所有依赖）
 
