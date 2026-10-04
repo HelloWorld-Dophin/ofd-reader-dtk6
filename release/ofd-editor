@@ -36,11 +36,16 @@ fi
 JAVA_HOME="$JRE_DIR"
 export JAVA_HOME
 
-# --- 3. LD_LIBRARY_PATH：内置 JRE 优先于任何系统 JDK ---
-# libofd-jna-core.so 硬编码 RUNPATH 指向系统 JDK，
-# 但 LD_LIBRARY_PATH 优先级高于 DT_RUNPATH。
-# 同时加入 native so 所在目录。
-export LD_LIBRARY_PATH="$JRE_DIR/lib/server:$APP_HOME/lib:$LD_LIBRARY_PATH"
+# --- 3. LD_LIBRARY_PATH ---
+# 顺序：内置 Qt6 → 内置 JRE → native so
+# LD_LIBRARY_PATH 优先级高于 DT_RUNPATH。
+# 内置 Qt6 解决 openKylin 2.0 / 老发行版 Qt 版本不够（如 Qt 6.5 vs 编译机 6.8）的问题。
+QT6_DIR="$APP_HOME/qt6"
+if [ -d "$QT6_DIR/lib" ]; then
+    export LD_LIBRARY_PATH="$QT6_DIR/lib:$JRE_DIR/lib/server:$APP_HOME/lib:$LD_LIBRARY_PATH"
+else
+    export LD_LIBRARY_PATH="$JRE_DIR/lib/server:$APP_HOME/lib:$LD_LIBRARY_PATH"
+fi
 
 # --- 4. OFD_JNA_CLASSPATH：收集所有 jars ---
 # Java classes 目录
